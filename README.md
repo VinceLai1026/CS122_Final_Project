@@ -1,4 +1,4 @@
-# Homework_8
+# Homework 8 - Project Description
 
 # Project Title
 Weather Insight
@@ -12,7 +12,7 @@ This project will create a Python interface that allows users to explore real-ti
 
 ## Project Outline/Plan
 - Set up GitHub and assign roles
-- Build GUI (Tkinter or Flask)
+- Build GUI (Flask)
 - Fetch data from web
 - Store and clean the data
 - Analyze trends
