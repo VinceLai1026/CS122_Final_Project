@@ -28,5 +28,13 @@ I will use a weather API or scrape data from a free weather site. The data will 
 ## Data Analysis and Visualization Plan (written by Het Tikawala)
 I will use NumPy and Matplotlib to calculate averages, detect anomalies, and plot graphs showing temperature changes over time.
 
+## Technologies Used
+- Python
+- Tkinter
+- NumPy
+- Matplotlib
+- Requests (for API calls)
+- CSV (for data storage)
+
 ## License
 MIT License
