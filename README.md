@@ -25,7 +25,7 @@ We will build a 2-screen GUI using Tkinter with at least 4 widgets: a drop-down 
 ## Data Collection and Storage Plan (written by Vince Lai)
 I will use a weather API or scrape data from a free weather site. The data will be stored in CSV files organized by city and date.
 
-## Data Analysis and Visualization Plan (written by [Het Tikawala])
+## Data Analysis and Visualization Plan (written by Het Tikawala)
 I will use NumPy and Matplotlib to calculate averages, detect anomalies, and plot graphs showing temperature changes over time.
 
 ## License
