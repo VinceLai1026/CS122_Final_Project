@@ -4,8 +4,8 @@
 Weather Insight
 
 ## Authors
-- [yourusername](https://github.com/yourusername)
-- [partnerusername](https://github.com/partnerusername)
+- [VinceLai1026](https://github.com/VinceLai1026)
+- [het8802](https://github.com/partnerusername)
 
 ## Project Description
 This project will create a Python interface that allows users to explore real-time weather data. It will gather weather data from the internet, store it, analyze it, and visualize trends. The interface will have buttons, drop-downs, and multiple screens. The project aims to make weather analysis easy and insightful. It will be built using Tkinter or Flask.
