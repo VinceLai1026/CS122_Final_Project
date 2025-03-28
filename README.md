@@ -8,7 +8,7 @@ Weather Insight
 - [het8802](https://github.com/het8802)
 
 ## Project Description
-This project will create a Python interface that allows users to explore real-time weather data. It will gather weather data from the internet, store it, analyze it, and visualize trends. The interface will have buttons, drop-downs, and multiple screens. The project aims to make weather analysis easy and insightful. It will be built using Tkinter or Flask.
+This project will create a Python interface that allows users to explore real-time weather data. It will gather weather data from the internet, store it, analyze it, and visualize trends. The interface will have buttons, drop-downs, and multiple screens. The project aims to make weather analysis easy and insightful. It will be built using Flask.
 
 ## Project Outline/Plan
 - Set up GitHub and assign roles
