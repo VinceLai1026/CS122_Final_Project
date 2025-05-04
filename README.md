@@ -1,4 +1,4 @@
-# Homework 8 - Project Description
+# CS122 Final Project
 
 # Project Title
 Weather Insight
