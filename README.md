@@ -1,36 +1,41 @@
 # CS122 Final Project
 
-# Project Title
-Weather Insight
+## Project Title
+**Weather Insight**
 
 ## Authors
 - [VinceLai1026](https://github.com/VinceLai1026)
 - [het8802](https://github.com/het8802)
 
 ## Project Description
-This project will create a Python interface that allows users to explore real-time weather data. It will gather weather data from the internet, store it, analyze it, and visualize trends. The interface will have buttons, drop-downs, and multiple screens. The project aims to make weather analysis easy and insightful. It will be built using Flask.
+This project creates a web-based Python application using Flask to allow users to explore real-time weather data. Users can input a city and state, fetch current weather conditions from the OpenWeatherMap API, view results directly in the browser, and save the data as a CSV file for later analysis. The interface uses HTML and CSS for styling, and the backend fetches and organizes data automatically. This project makes weather analysis easy, accessible, and visually clear.
 
 ## Project Outline/Plan
 - Set up GitHub and assign roles
-- Build GUI (Flask)
-- Fetch data from web
-- Store and clean the data
-- Analyze trends
+- Build GUI (Flask with HTML/CSS)
+- Fetch data from OpenWeatherMap API
+- Store data as CSV file
+- Analyze trends using NumPy and Matplotlib
 - Visualize results
 - Present final product
 
 ## Interface Plan
-We will build a 2-screen GUI using Tkinter with at least 4 widgets: a drop-down to choose city, a button to fetch data, a checkbox for selecting temperature or humidity, and a graph output.
+We built a web interface using Flask with two main user interactions:
+1. A form where the user enters a city and state (abbreviation)
+2. A result display showing the current temperature and humidity, plus an option to download the CSV
+
+The design uses a modern HTML/CSS layout for clarity and ease of use.
 
 ## Data Collection and Storage Plan (written by Vince Lai)
-I will use a weather API or scrape data from a free weather site. The data will be stored in CSV files organized by city and date.
+We use the OpenWeatherMap API to fetch real-time weather data. The application retrieves the temperature (in °F) and humidity, then saves the data in a CSV file named after the city and state (e.g., `San_Jose_CA_weather.csv`). Each fetch call generates fresh data and overwrites the previous CSV for that city/state.
 
 ## Data Analysis and Visualization Plan (written by Het Tikawala)
-I will use NumPy and Matplotlib to calculate averages, detect anomalies, and plot graphs showing temperature changes over time.
+We use NumPy and Matplotlib to process the stored CSV data. The analysis includes calculating averages and detecting anomalies. The results are visualized as plots showing weather trends over time.
 
 ## Technologies Used
 - Python
-- Tkinter
+- Flask
+- HTML / CSS
 - NumPy
 - Matplotlib
 - Requests (for API calls)
