@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather Insight</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Insight</h1>
+        <form method="POST">
+            <label for="city">City:</label>
+            <input type="text" name="city" required>
+        
+            <label for="state">State (abbreviation):</label>
+            <input type="text" name="state" required>
+        
+            <label>Units:</label><br>
+            <input type="radio" id="imperial" name="units" value="imperial" checked>
+            <label for="imperial">Fahrenheit</label>
+            <input type="radio" id="metric" name="units" value="metric">
+            <label for="metric">Celsius</label>
+        
+            <br><button type="submit">Fetch Weather</button>
+        </form>
+        
+
+        {% if weather %}
+            {% if weather.error %}
+                <p class="error">{{ weather.error }}</p>
+            {% else %}
+                <h2>{{ weather.city }} Weather</h2>
+                <p>Temperature: {{ weather.temp }} {{ weather.unit_symbol }}</p>
+                <p>Humidity: {{ weather.humidity }}%</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
