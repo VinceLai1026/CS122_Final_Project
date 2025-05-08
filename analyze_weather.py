@@ -38,9 +38,6 @@ def analyze_searched_cities(df):
         print(f"Number of times searched: {len(city_data)}")
         print(f"Latest temperature: {city_data['Temperature (°C)'].iloc[-1]:.1f}°C")
         print(f"Latest humidity: {city_data['Humidity (%)'].iloc[-1]:.1f}%")
-        print(f"Temperature range: {city_data['Temperature (°C)'].min():.1f}°C to {city_data['Temperature (°C)'].max():.1f}°C")
-        print(f"Average temperature: {city_data['Temperature (°C)'].mean():.1f}°C")
-        print(f"Average humidity: {city_data['Humidity (%)'].mean():.1f}%")
 
 def find_extremes(df):
     """Find extreme weather conditions among searched cities."""
@@ -57,60 +54,61 @@ def find_extremes(df):
     print(f"\nColdest temperature recorded: {coldest['Temperature (°C)']:.1f}°C")
     print(f"City: {coldest['City']}, {coldest['State']}")
     print(f"Time: {coldest['Timestamp']}")
-    
-    # Find highest and lowest humidity
-    highest_humidity = df.loc[df['Humidity (%)'].idxmax()]
-    lowest_humidity = df.loc[df['Humidity (%)'].idxmin()]
-    
-    print(f"\nHighest humidity recorded: {highest_humidity['Humidity (%)']:.1f}%")
-    print(f"City: {highest_humidity['City']}, {highest_humidity['State']}")
-    print(f"Time: {highest_humidity['Timestamp']}")
-    
-    print(f"\nLowest humidity recorded: {lowest_humidity['Humidity (%)']:.1f}%")
-    print(f"City: {lowest_humidity['City']}, {lowest_humidity['State']}")
-    print(f"Time: {lowest_humidity['Timestamp']}")
 
-def create_city_comparison_visualizations(df):
-    """Create visualizations comparing the searched cities."""
-    print("\n=== Creating City Comparison Visualizations ===")
+def create_weather_visualization(df):
+    """Create visualization of latest temperatures and humidity with extreme cities highlighted."""
+    print("\n=== Creating Weather Visualizations ===")
     
     # Set style to a built-in matplotlib style
     plt.style.use('ggplot')
     
-    # 1. Temperature Comparison Bar Chart
-    plt.figure(figsize=(12, 6))
-    city_avg_temp = df.groupby(['City', 'State'])['Temperature (°C)'].mean().sort_values(ascending=False)
-    city_avg_temp.plot(kind='bar')
-    plt.title('Average Temperature by City')
-    plt.xlabel('City')
-    plt.ylabel('Temperature (°C)')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig('city_temperature_comparison.png')
-    plt.close()
+    # Get hottest, coldest, most humid, and least humid cities
+    hottest_city = df.loc[df['Temperature (°C)'].idxmax()]
+    coldest_city = df.loc[df['Temperature (°C)'].idxmin()]
+    most_humid_city = df.loc[df['Humidity (%)'].idxmax()]
+    least_humid_city = df.loc[df['Humidity (%)'].idxmin()]
     
-    # 2. Temperature Range by City
-    plt.figure(figsize=(12, 6))
-    city_temp_ranges = df.groupby(['City', 'State']).agg({
-        'Temperature (°C)': ['min', 'max']
-    })
-    city_temp_ranges.plot(kind='bar')
-    plt.title('Temperature Range by City')
-    plt.xlabel('City')
-    plt.ylabel('Temperature (°C)')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig('city_temperature_ranges.png')
-    plt.close()
-    
-    # 3. Latest Weather Conditions
+    # Get latest weather conditions
     latest_data = df.sort_values('Timestamp').groupby(['City', 'State']).last()
+    
+    # 1. Temperature Visualization
     plt.figure(figsize=(12, 6))
-    plt.bar(latest_data.reset_index()['City'], latest_data['Temperature (°C)'])
-    plt.title('Latest Temperature by City')
-    plt.xticks(rotation=45)
+    temp_colors = []
+    for city_state in latest_data.index:
+        if city_state[0] == hottest_city['City'] and city_state[1] == hottest_city['State']:
+            temp_colors.append('red')
+        elif city_state[0] == coldest_city['City'] and city_state[1] == coldest_city['State']:
+            temp_colors.append('blue')
+        else:
+            temp_colors.append('gray')
+    
+    plt.bar(range(len(latest_data)), latest_data['Temperature (°C)'], color=temp_colors)
+    plt.title('Latest Temperature by City\n(Red: Hottest, Blue: Coldest)')
+    plt.xlabel('City')
+    plt.ylabel('Temperature (°C)')
+    plt.xticks(range(len(latest_data)), [f"{city}, {state}" for city, state in latest_data.index], rotation=45)
     plt.tight_layout()
     plt.savefig('latest_temperatures.png')
+    plt.close()
+    
+    # 2. Humidity Visualization
+    plt.figure(figsize=(12, 6))
+    humidity_colors = []
+    for city_state in latest_data.index:
+        if city_state[0] == most_humid_city['City'] and city_state[1] == most_humid_city['State']:
+            humidity_colors.append('green')  # Most humid in green
+        elif city_state[0] == least_humid_city['City'] and city_state[1] == least_humid_city['State']:
+            humidity_colors.append('orange')  # Least humid in orange
+        else:
+            humidity_colors.append('gray')
+    
+    plt.bar(range(len(latest_data)), latest_data['Humidity (%)'], color=humidity_colors)
+    plt.title('Latest Humidity by City\n(Green: Most Humid, Orange: Least Humid)')
+    plt.xlabel('City')
+    plt.ylabel('Humidity (%)')
+    plt.xticks(range(len(latest_data)), [f"{city}, {state}" for city, state in latest_data.index], rotation=45)
+    plt.tight_layout()
+    plt.savefig('latest_humidity.png')
     plt.close()
 
 def main():
@@ -127,12 +125,11 @@ def main():
     find_extremes(df)
     
     # Create visualizations
-    create_city_comparison_visualizations(df)
+    create_weather_visualization(df)
     
     print("\nAnalysis complete! Check the generated PNG files for visualizations:")
-    print("- city_temperature_comparison.png")
-    print("- city_temperature_ranges.png")
     print("- latest_temperatures.png")
+    print("- latest_humidity.png")
 
 if __name__ == "__main__":
     main() 
