@@ -1,10 +1,58 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import requests
 import csv
+from datetime import datetime, timedelta
+import os
+from analyze_weather import create_weather_heatmap, load_and_prepare_data
 
 app = Flask(__name__)
 
 API_KEY = "25931e218dfddc5eebc3e949a3a0882e"
+WEATHER_DATA_FILE = "weather_data.csv"
+
+def fahrenheit_to_celsius(f_temp):
+    return round((f_temp - 32) * 5/9, 2)
+
+def update_or_append_weather_data(timestamp, city, state, temp_celsius, humidity):
+    file_exists = os.path.isfile(WEATHER_DATA_FILE)
+    current_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    twenty_four_hours_ago = current_time - timedelta(hours=24)
+    
+    if not file_exists:
+        # Create new file with header
+        with open(WEATHER_DATA_FILE, "w", newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Timestamp", "City", "State", "Temperature (°C)", "Humidity (%)"])
+            writer.writerow([timestamp, city, state, temp_celsius, humidity])
+        return
+
+    # Read existing data
+    rows = []
+    with open(WEATHER_DATA_FILE, "r", newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        header = next(reader)  # Skip header
+        rows = list(reader)
+
+    # Check for existing entry in last 24 hours
+    found = False
+    for i, row in enumerate(rows):
+        row_time = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
+        if (row[1] == city and row[2] == state and 
+            row_time > twenty_four_hours_ago):
+            # Update existing entry
+            rows[i] = [timestamp, city, state, temp_celsius, humidity]
+            found = True
+            break
+
+    if not found:
+        # Append new entry
+        rows.append([timestamp, city, state, temp_celsius, humidity])
+
+    # Write all data back to file
+    with open(WEATHER_DATA_FILE, "w", newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(header)
+        writer.writerows(rows)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -22,29 +70,38 @@ def index():
 
         if data.get("main"):
             temp = data["main"]["temp"]
+            # Convert to Celsius if the temperature is in Fahrenheit
+            temp_celsius = fahrenheit_to_celsius(temp) if units == "imperial" else temp
             humidity = data["main"]["humidity"]
-
-            # Save to CSV
-            filename = f"{city}_{state}_weather.csv"
-            header = ["City", f"Temperature ({unit_symbol})", "Humidity (%)"]
-            with open(filename, "w", newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(header)
-                writer.writerow([f"{city},{state}", temp, humidity])
-
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             unit_symbol = "°F" if units == "imperial" else "°C"
+
+            # Update or append weather data
+            try:
+                update_or_append_weather_data(timestamp, city, state, temp_celsius, humidity)
+            except Exception as e:
+                print(f"Error updating CSV: {e}")
 
             weather_data = {
                 "city": f"{city}, {state}",
-                "temp": temp,
+                "temp": temp,  # Keep original temperature for display
                 "humidity": humidity,
                 "unit_symbol": unit_symbol
-}
-
+            }
         else:
             weather_data = {"error": "City not found or invalid input."}
 
     return render_template('index.html', weather=weather_data)
+
+@app.route('/heatmap')
+def show_heatmap():
+    """Generate and serve the weather heatmap."""
+    # Load data and create heatmap
+    df = load_and_prepare_data()
+    if df is not None:
+        create_weather_heatmap(df)
+        return send_file('weather_heatmap.html')
+    return "No weather data available", 404
 
 if __name__ == '__main__':
     app.run(debug=True)

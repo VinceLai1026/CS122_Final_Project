@@ -29,11 +29,19 @@
             {% if weather.error %}
                 <p class="error">{{ weather.error }}</p>
             {% else %}
-                <h2>{{ weather.city }} Weather</h2>
-                <p>Temperature: {{ weather.temp }} {{ weather.unit_symbol }}</p>
-                <p>Humidity: {{ weather.humidity }}%</p>
+                <div class="weather-result">
+                    <h2>{{ weather.city }} Weather</h2>
+                    <p>Temperature: {{ weather.temp }} {{ weather.unit_symbol }}</p>
+                    <p>Humidity: {{ weather.humidity }}%</p>
+                </div>
             {% endif %}
         {% endif %}
+
+        <div class="visualization-links">
+            <h3>Weather Visualizations</h3>
+            <a href="/heatmap" class="button" target="_blank">View Weather Heatmap</a>
+            <p class="note">Opens in a new tab</p>
+        </div>
     </div>
 </body>
 </html>

@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 .DS_Store
 *.env
+.venv/
+weather_data.csv
+*.png
+weather_heatmap.html
