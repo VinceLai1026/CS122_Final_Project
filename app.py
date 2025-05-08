@@ -10,10 +10,11 @@ app = Flask(__name__)
 API_KEY = "25931e218dfddc5eebc3e949a3a0882e"
 WEATHER_DATA_FILE = "weather_data.csv"
 
-def fahrenheit_to_celsius(f_temp):
-    return round((f_temp - 32) * 5/9, 2)
+def celsius_to_fahrenheit(c_temp):
+    """Convert Celsius to Fahrenheit."""
+    return round((c_temp * 9/5) + 32, 2)
 
-def update_or_append_weather_data(timestamp, city, state, temp_celsius, humidity):
+def update_or_append_weather_data(timestamp, city, state, temp_fahrenheit, humidity):
     file_exists = os.path.isfile(WEATHER_DATA_FILE)
     current_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
     twenty_four_hours_ago = current_time - timedelta(hours=24)
@@ -22,8 +23,8 @@ def update_or_append_weather_data(timestamp, city, state, temp_celsius, humidity
         # Create new file with header
         with open(WEATHER_DATA_FILE, "w", newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(["Timestamp", "City", "State", "Temperature (°C)", "Humidity (%)"])
-            writer.writerow([timestamp, city, state, temp_celsius, humidity])
+            writer.writerow(["Timestamp", "City", "State", "Temperature (°F)", "Humidity (%)"])
+            writer.writerow([timestamp, city, state, temp_fahrenheit, humidity])
         return
 
     # Read existing data
@@ -40,13 +41,13 @@ def update_or_append_weather_data(timestamp, city, state, temp_celsius, humidity
         if (row[1] == city and row[2] == state and 
             row_time > twenty_four_hours_ago):
             # Update existing entry
-            rows[i] = [timestamp, city, state, temp_celsius, humidity]
+            rows[i] = [timestamp, city, state, temp_fahrenheit, humidity]
             found = True
             break
 
     if not found:
         # Append new entry
-        rows.append([timestamp, city, state, temp_celsius, humidity])
+        rows.append([timestamp, city, state, temp_fahrenheit, humidity])
 
     # Write all data back to file
     with open(WEATHER_DATA_FILE, "w", newline='') as csvfile:
@@ -57,7 +58,6 @@ def update_or_append_weather_data(timestamp, city, state, temp_celsius, humidity
 @app.route('/', methods=['GET', 'POST'])
 def index():
     weather_data = None
-    unit_symbol = ""  
     if request.method == 'POST':
         city = request.form['city']
         state = request.form['state']
@@ -70,21 +70,25 @@ def index():
 
         if data.get("main"):
             temp = data["main"]["temp"]
-            # Convert to Celsius if the temperature is in Fahrenheit
-            temp_celsius = fahrenheit_to_celsius(temp) if units == "imperial" else temp
             humidity = data["main"]["humidity"]
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            unit_symbol = "°F" if units == "imperial" else "°C"
 
-            # Update or append weather data
+            # Convert temperature to Fahrenheit if it's in Celsius
+            temp_fahrenheit = temp if units == "imperial" else celsius_to_fahrenheit(temp)
+            
+            # Update or append weather data (always in Fahrenheit)
             try:
-                update_or_append_weather_data(timestamp, city, state, temp_celsius, humidity)
+                update_or_append_weather_data(timestamp, city, state, temp_fahrenheit, humidity)
             except Exception as e:
                 print(f"Error updating CSV: {e}")
 
+            # Display temperature in user's preferred unit
+            display_temp = temp_fahrenheit if units == "imperial" else round((temp_fahrenheit - 32) * 5/9, 2)
+            unit_symbol = "°F" if units == "imperial" else "°C"
+
             weather_data = {
                 "city": f"{city}, {state}",
-                "temp": temp,  # Keep original temperature for display
+                "temp": display_temp,
                 "humidity": humidity,
                 "unit_symbol": unit_symbol
             }
@@ -104,4 +108,4 @@ def show_heatmap():
     return "No weather data available", 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5002)  # Changed port to 5002 to avoid conflicts

@@ -41,7 +41,7 @@ def analyze_searched_cities(df):
         
         print(f"\n{row['City']}, {row['State']}:")
         print(f"Number of times searched: {len(city_data)}")
-        print(f"Latest temperature: {city_data['Temperature (°C)'].iloc[-1]:.1f}°C")
+        print(f"Latest temperature: {city_data['Temperature (°F)'].iloc[-1]:.1f}°F")
         print(f"Latest humidity: {city_data['Humidity (%)'].iloc[-1]:.1f}%")
 
 def find_extremes(df):
@@ -49,14 +49,14 @@ def find_extremes(df):
     print("\n=== Extreme Weather Conditions ===")
     
     # Find hottest and coldest temperatures
-    hottest = df.loc[df['Temperature (°C)'].idxmax()]
-    coldest = df.loc[df['Temperature (°C)'].idxmin()]
+    hottest = df.loc[df['Temperature (°F)'].idxmax()]
+    coldest = df.loc[df['Temperature (°F)'].idxmin()]
     
-    print(f"\nHottest temperature recorded: {hottest['Temperature (°C)']:.1f}°C")
+    print(f"\nHottest temperature recorded: {hottest['Temperature (°F)']:.1f}°F")
     print(f"City: {hottest['City']}, {hottest['State']}")
     print(f"Time: {hottest['Timestamp']}")
     
-    print(f"\nColdest temperature recorded: {coldest['Temperature (°C)']:.1f}°C")
+    print(f"\nColdest temperature recorded: {coldest['Temperature (°F)']:.1f}°F")
     print(f"City: {coldest['City']}, {coldest['State']}")
     print(f"Time: {coldest['Timestamp']}")
 
@@ -68,8 +68,8 @@ def create_weather_visualization(df):
     plt.style.use('ggplot')
     
     # Get hottest, coldest, most humid, and least humid cities
-    hottest_city = df.loc[df['Temperature (°C)'].idxmax()]
-    coldest_city = df.loc[df['Temperature (°C)'].idxmin()]
+    hottest_city = df.loc[df['Temperature (°F)'].idxmax()]
+    coldest_city = df.loc[df['Temperature (°F)'].idxmin()]
     most_humid_city = df.loc[df['Humidity (%)'].idxmax()]
     least_humid_city = df.loc[df['Humidity (%)'].idxmin()]
     
@@ -87,10 +87,10 @@ def create_weather_visualization(df):
         else:
             temp_colors.append('gray')
     
-    plt.bar(range(len(latest_data)), latest_data['Temperature (°C)'], color=temp_colors)
+    plt.bar(range(len(latest_data)), latest_data['Temperature (°F)'], color=temp_colors)
     plt.title('Latest Temperature by City\n(Red: Hottest, Blue: Coldest)')
     plt.xlabel('City')
-    plt.ylabel('Temperature (°C)')
+    plt.ylabel('Temperature (°F)')
     plt.xticks(range(len(latest_data)), [f"{city}, {state}" for city, state in latest_data.index], rotation=45)
     plt.tight_layout()
     plt.savefig('latest_temperatures.png')
@@ -118,14 +118,18 @@ def create_weather_visualization(df):
 
 def get_coordinates(city, state):
     """Get latitude and longitude for a city using geopy."""
-    geolocator = Nominatim(user_agent="weather_analysis")
+    geolocator = Nominatim(user_agent="weather_analysis", timeout=10)  # Increased timeout
     try:
-        location = geolocator.geocode(f"{city}, {state}, USA")
+        # Ensure city and state are strings
+        city_str = str(city).strip()
+        state_str = str(state).strip()
+        location = geolocator.geocode(f"{city_str}, {state_str}, USA")
         if location:
             return location.latitude, location.longitude
         return None
     except GeocoderTimedOut:
-        time.sleep(1)
+        print(f"Timeout getting coordinates for {city}, {state}. Retrying...")
+        time.sleep(2)  # Increased sleep time
         return get_coordinates(city, state)
     except Exception as e:
         print(f"Error getting coordinates for {city}, {state}: {e}")
@@ -146,32 +150,79 @@ def create_weather_heatmap(df):
     for _, row in latest_data.iterrows():
         coords = get_coordinates(row['City'], row['State'])
         if coords:
+            # Use actual temperature for the heat intensity
             # Normalize temperature to a 0-1 scale for better visualization
-            # Assuming temperature range from -20°C to 40°C
-            normalized_temp = (row['Temperature (°C)'] + 20) / 60
+            # Assuming temperature range from 0°F to 100°F
+            temp = float(row['Temperature (°F)'])  # Ensure temperature is float
+            normalized_temp = temp / 100  # This will give values between 0 and 1
             heat_data.append([coords[0], coords[1], normalized_temp])
             
             # Add markers with popups
             popup_text = f"""
             <b>{row['City']}, {row['State']}</b><br>
-            Temperature: {row['Temperature (°C)']:.1f}°C<br>
-            Humidity: {row['Humidity (%)']:.1f}%
+            Temperature: {temp:.1f}°F<br>
+            Humidity: {float(row['Humidity (%)']):.1f}%
             """
+            
+            # Color the marker based on temperature
+            if temp < 32:
+                color = 'blue'  # Freezing
+            elif temp < 50:
+                color = 'lightblue'  # Cold
+            elif temp < 70:
+                color = 'green'  # Moderate
+            elif temp < 85:
+                color = 'orange'  # Warm
+            else:
+                color = 'red'  # Hot
+            
             folium.CircleMarker(
                 location=coords,
                 radius=8,
                 popup=folium.Popup(popup_text, max_width=300),
-                color='red',
+                color=color,
                 fill=True,
-                fill_color='red',
+                fill_color=color,
                 fill_opacity=0.7
             ).add_to(m)
     
-    # Add the heatmap layer
-    HeatMap(heat_data).add_to(m)
+    # Add the heatmap layer with a custom gradient
+    if heat_data:  # Only add heatmap if we have data
+        HeatMap(
+            heat_data,
+            gradient={
+                '0.0': 'blue',    # Freezing
+                '0.25': 'lightblue',  # Cold
+                '0.5': 'green',   # Moderate
+                '0.75': 'orange', # Warm
+                '1.0': 'red'      # Hot
+            },
+            min_opacity=0.5,
+            radius=25,
+            blur=15
+        ).add_to(m)
     
     # Add a layer control
     folium.LayerControl().add_to(m)
+    
+    # Add a legend
+    legend_html = '''
+    <div style="position: fixed; 
+                bottom: 50px; right: 50px; 
+                border:2px solid grey; z-index:9999; 
+                background-color:white;
+                padding:10px;
+                font-size:14px;
+                ">
+    <p><strong>Temperature Scale</strong></p>
+    <p><span style="color:blue;">■</span> Below 32°F (Freezing)</p>
+    <p><span style="color:lightblue;">■</span> 32-50°F (Cold)</p>
+    <p><span style="color:green;">■</span> 50-70°F (Moderate)</p>
+    <p><span style="color:orange;">■</span> 70-85°F (Warm)</p>
+    <p><span style="color:red;">■</span> Above 85°F (Hot)</p>
+    </div>
+    '''
+    m.get_root().html.add_child(folium.Element(legend_html))
     
     # Save the map
     m.save('weather_heatmap.html')
