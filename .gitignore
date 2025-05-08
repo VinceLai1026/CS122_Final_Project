@@ -5,3 +5,4 @@ __pycache__/
 .venv/
 weather_data.csv
 *.png
+weather_heatmap.html

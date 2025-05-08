@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import requests
 import csv
 from datetime import datetime, timedelta
 import os
+from analyze_weather import create_weather_heatmap, load_and_prepare_data
 
 app = Flask(__name__)
 
@@ -91,6 +92,16 @@ def index():
             weather_data = {"error": "City not found or invalid input."}
 
     return render_template('index.html', weather=weather_data)
+
+@app.route('/heatmap')
+def show_heatmap():
+    """Generate and serve the weather heatmap."""
+    # Load data and create heatmap
+    df = load_and_prepare_data()
+    if df is not None:
+        create_weather_heatmap(df)
+        return send_file('weather_heatmap.html')
+    return "No weather data available", 404
 
 if __name__ == '__main__':
     app.run(debug=True)

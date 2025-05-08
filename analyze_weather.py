@@ -4,6 +4,11 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
+import folium
+from folium.plugins import HeatMap
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
+import time
 
 def load_and_prepare_data():
     """Load the weather data and prepare it for analysis."""
@@ -111,6 +116,67 @@ def create_weather_visualization(df):
     plt.savefig('latest_humidity.png')
     plt.close()
 
+def get_coordinates(city, state):
+    """Get latitude and longitude for a city using geopy."""
+    geolocator = Nominatim(user_agent="weather_analysis")
+    try:
+        location = geolocator.geocode(f"{city}, {state}, USA")
+        if location:
+            return location.latitude, location.longitude
+        return None
+    except GeocoderTimedOut:
+        time.sleep(1)
+        return get_coordinates(city, state)
+    except Exception as e:
+        print(f"Error getting coordinates for {city}, {state}: {e}")
+        return None
+
+def create_weather_heatmap(df):
+    """Create an interactive heatmap of temperatures across searched cities."""
+    print("\n=== Creating Weather Heatmap ===")
+    
+    # Get latest weather conditions for each city
+    latest_data = df.sort_values('Timestamp').groupby(['City', 'State']).last().reset_index()
+    
+    # Create a base map centered on the US
+    m = folium.Map(location=[37.0902, -95.7129], zoom_start=4)
+    
+    # Add temperature heatmap
+    heat_data = []
+    for _, row in latest_data.iterrows():
+        coords = get_coordinates(row['City'], row['State'])
+        if coords:
+            # Normalize temperature to a 0-1 scale for better visualization
+            # Assuming temperature range from -20°C to 40°C
+            normalized_temp = (row['Temperature (°C)'] + 20) / 60
+            heat_data.append([coords[0], coords[1], normalized_temp])
+            
+            # Add markers with popups
+            popup_text = f"""
+            <b>{row['City']}, {row['State']}</b><br>
+            Temperature: {row['Temperature (°C)']:.1f}°C<br>
+            Humidity: {row['Humidity (%)']:.1f}%
+            """
+            folium.CircleMarker(
+                location=coords,
+                radius=8,
+                popup=folium.Popup(popup_text, max_width=300),
+                color='red',
+                fill=True,
+                fill_color='red',
+                fill_opacity=0.7
+            ).add_to(m)
+    
+    # Add the heatmap layer
+    HeatMap(heat_data).add_to(m)
+    
+    # Add a layer control
+    folium.LayerControl().add_to(m)
+    
+    # Save the map
+    m.save('weather_heatmap.html')
+    print("Heatmap saved as 'weather_heatmap.html'")
+
 def main():
     """Main function to run all analyses."""
     print("Starting Weather Data Analysis for Searched Cities...")
@@ -126,10 +192,12 @@ def main():
     
     # Create visualizations
     create_weather_visualization(df)
+    create_weather_heatmap(df)
     
-    print("\nAnalysis complete! Check the generated PNG files for visualizations:")
+    print("\nAnalysis complete! Check the generated files for visualizations:")
     print("- latest_temperatures.png")
     print("- latest_humidity.png")
+    print("- weather_heatmap.html")
 
 if __name__ == "__main__":
     main() 
