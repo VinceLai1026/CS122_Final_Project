@@ -3,7 +3,7 @@ import requests
 import csv
 from datetime import datetime, timedelta
 import os
-from analyze_weather import create_weather_heatmap, load_and_prepare_data
+from analyze_weather import create_weather_heatmap, load_and_prepare_data, create_weather_visualization
 
 app = Flask(__name__)
 
@@ -79,8 +79,12 @@ def index():
             # Update or append weather data (always in Fahrenheit)
             try:
                 update_or_append_weather_data(timestamp, city, state, temp_fahrenheit, humidity)
+                # Generate new visualizations after updating data
+                df = load_and_prepare_data()
+                if df is not None:
+                    create_weather_visualization(df)
             except Exception as e:
-                print(f"Error updating CSV: {e}")
+                print(f"Error updating CSV or generating visualizations: {e}")
 
             # Display temperature in user's preferred unit
             display_temp = temp_fahrenheit if units == "imperial" else round((temp_fahrenheit - 32) * 5/9, 2)
@@ -106,6 +110,16 @@ def show_heatmap():
         create_weather_heatmap(df)
         return send_file('weather_heatmap.html')
     return "No weather data available", 404
+
+@app.route('/temperature_plot')
+def show_temperature_plot():
+    """Serve the temperature visualization."""
+    return send_file('latest_temperatures.png')
+
+@app.route('/humidity_plot')
+def show_humidity_plot():
+    """Serve the humidity visualization."""
+    return send_file('latest_humidity.png')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)  # Changed port to 5002 to avoid conflicts

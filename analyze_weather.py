@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')  # Set the backend to non-interactive 'Agg'
 import pandas as pd
 import numpy as np
 from scipy import stats

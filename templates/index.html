@@ -24,7 +24,6 @@
             <br><button type="submit">Fetch Weather</button>
         </form>
         
-
         {% if weather %}
             {% if weather.error %}
                 <p class="error">{{ weather.error }}</p>
@@ -37,10 +36,22 @@
             {% endif %}
         {% endif %}
 
-        <div class="visualization-links">
+        <div class="visualization-section">
             <h3>Weather Visualizations</h3>
-            <a href="/heatmap" class="button" target="_blank">View Weather Heatmap</a>
-            <p class="note">Opens in a new tab</p>
+            <div class="visualization-grid">
+                <div class="visualization-item">
+                    <h4>Temperature Distribution</h4>
+                    <img src="/temperature_plot" alt="Temperature Distribution" class="visualization-img">
+                </div>
+                <div class="visualization-item">
+                    <h4>Humidity Distribution</h4>
+                    <img src="/humidity_plot" alt="Humidity Distribution" class="visualization-img">
+                </div>
+            </div>
+            <div class="heatmap-link">
+                <a href="/heatmap" class="button" target="_blank">View Weather Heatmap</a>
+                <p class="note">Opens in a new tab</p>
+            </div>
         </div>
     </div>
 </body>
