@@ -30,7 +30,7 @@ The design uses a modern HTML/CSS layout for clarity and ease of use.
 We use the OpenWeatherMap API to fetch real-time weather data. The application retrieves the temperature (in °F) and humidity, then saves the data in a CSV file named after the city and state (e.g., `San_Jose_CA_weather.csv`). Each fetch call generates fresh data and overwrites the previous CSV for that city/state.
 
 ## Data Analysis and Visualization Plan (written by Het Tikawala)
-We use NumPy and Matplotlib to process the stored CSV data. The analysis includes calculating averages and detecting anomalies. The results are visualized as plots showing weather trends over time.
+We use NumPy, Folium and Matplotlib to process the stored CSV data. The analysis includes calculating averages and detecting anomalies. The results are visualized as plots showing weather trends in different cities and also create a heatmap to visualize the temperature in different cities.
 
 ## Technologies Used
 - Python
